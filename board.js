@@ -6,10 +6,63 @@ function Position(x,y) {
     }
 }
 
+
+function ScoreBoard() {
+    this.moves = 0
+    this.possibilities = 0
+    this.draw = function() {
+        d3.select("svg").append("svg").attr("id", "scoreboardBox")
+            .attr("x", "100%")
+            .attr("y", 0)
+            .attr("height" , "200px")
+            .attr("width", 1)
+            .attr("style", "overflow: visible")
+        d3.select("#scoreboardBox")
+            .append("rect")
+            .attr("x", -100)
+            .attr("y", 0)
+            .attr("width", 100)
+            .attr("height", 50)
+            .attr("style", "stroke: #000000; fill: none")
+
+        d3.select("#scoreboardBox")
+            .append("text")
+            .attr("x", -50)
+            .attr("y", 25)
+            .text("0")
+            .attr("id", "moves")
+            .attr("dominant-baseline", "middle").attr("text-anchor", "middle")
+
+        d3.select("#scoreboardBox")
+            .append("rect")
+            .attr("x", -100)
+            .attr("y", 60)
+            .attr("width", 100)
+            .attr("height", 50)
+            .attr("style", "stroke: #000000; fill: none")
+
+        d3.select("#scoreboardBox")
+            .append("text")
+            .attr("x", -50)
+            .attr("y", 85)
+            .text("0")
+            .attr("id", "options")
+            .attr("dominant-baseline", "middle").attr("text-anchor", "middle")    
+    }
+    this.update = function() {
+        d3.select("#moves").text(this.moves)
+        d3.select("#options").text(this.possibilities)
+    }
+}
+
 function Board(size) {
     this.boardSize = 2*size - 1 
-    this.cellSize = 50
+    this.cellSize = 25
     this.tiles = []
+    this.scoreboardBox = new ScoreBoard()
+    this.moves = 0
+
+
     for (i=0;i<this.boardSize;i++) {
         this.tiles.push(Array(this.boardSize).fill(0))
     }
@@ -46,7 +99,9 @@ function Board(size) {
     }
 }
 
-let theBoard = new Board(20)
+
+let theBoard = new Board(40)
+
 
 theBoard.draw = function() {
     xs = this.tiles.length
@@ -62,9 +117,12 @@ theBoard.draw = function() {
                 filling = "black"
             d3.select("svg").append("g").attr("id", id).attr("transform", "translate(" +x*this.cellSize + ", " + y * this.cellSize + ")")
             d3.select("#"+ id).append("rect").attr("width", this.cellSize).attr("height", this.cellSize).attr("style", "fill : "+filling+"; stroke: black; opacity: 0.3")
-            d3.select("#"+ id).append("text").attr("dominant-baseline", "middle").attr("text-anchor", "middle").attr("x", this.cellSize/2).attr("y", this.cellSize/2).text(formatter.format(this.tiles[x][y]))
+            d3.select("#"+ id).append("text").attr("dominant-baseline", "middle").attr("text-anchor", "middle").attr("font-size", "0.5em").attr("x", this.cellSize/2).attr("y", this.cellSize/2).text(formatter.format(this.tiles[x][y]))
         }
     }
+    // start the path
+    d3.select("#g1").append("path").attr("d", "M " + this.cellSize/2 + " " +this.cellSize/2).attr("id", "way").attr("style" , "fill: none; stroke : url(#Gradient2); stroke-width : 3; opacity: 10")
+    this.scoreboardBox.draw()
 }
 
 
@@ -95,17 +153,30 @@ theBoard.moveKnight = function() {
         return a.value - b.value
     })
     var nextMove = possibleMoves[0].value
+
+    if (possibleMoves.length > 0) {
+        this.scoreboardBox.moves ++ 
+        this.scoreboardBox.possibilities = possibleMoves.length 
+        this.scoreboardBox.update()
+    }
+
+    dx = possibleMoves[0].pos.x - this.knight.pos.x
+    dy = possibleMoves[0].pos.y - this.knight.pos.y
     this.knight.pos = possibleMoves[0].pos
     // move the knight
     d3.select("#knight").remove()
-    d3.select("#g" + nextMove).append("use").attr("xlink:href", "#knightDef").attr("transform", "scale(0.7)").attr("id", "knight")
-    d3.select("#g" + currentVal).attr("style", "opacity : 0.1 ")
+    d3.select("#g" + nextMove).append("use").attr("xlink:href", "#knightDef").attr("transform", "scale(0.5)").attr("id", "knight")
+    d3.select("#g" + currentVal).select("rect").attr("style", "opacity : 0.1 ")
+
+    // draw the way we walked
+    oldPathData = d3.select("#way").attr("d")
+    d3.select("#way").attr("d", oldPathData + " l " + dx * this.cellSize + "  " + dy*this.cellSize)
 }
 
 
 theBoard.draw()
 theBoard.placeKnight()
 
-for (i = 0; i< 1000;i++){
-    setTimeout(function() {theBoard.moveKnight()}, i*50)
+for (i = 0; i< 3000;i++){
+    setTimeout(function() {theBoard.moveKnight()}, i*10)
 }
