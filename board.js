@@ -57,7 +57,7 @@ function ScoreBoard() {
 
 function Board(size) {
     this.boardSize = 2*size - 1 
-    this.cellSize = 25
+    this.cellSize = 20
     this.tiles = []
     this.scoreboardBox = new ScoreBoard()
     this.moves = 0
@@ -71,15 +71,11 @@ function Board(size) {
     this.center = new Position(x,y)
     v  = 1
     // init
-    this.tiles[x--][y] = v
+    this.tiles[x][y] = v
     for (r = 1 ; r<size;r++) {
-        // up
-        upstart = ++v
-        this.tiles[++x][--y] = upstart
         // right
-        while(this.tiles[x][y+1] != 0){ 
-            this.tiles[++x][y] = ++v
-        }
+        upstart = ++v
+        this.tiles[++x][y] = upstart
         // down
         while(this.tiles[x-1][y] != 0){ 
             this.tiles[x][++y] = ++v
@@ -89,24 +85,29 @@ function Board(size) {
             this.tiles[--x][y] = ++v
         }
         //up
-        while(this.tiles[x+1][y] != 0 && this.tiles[x+1][y] != upstart ){ 
+        while(this.tiles[x+1][y] != 0  ){ 
             this.tiles[x][--y] = ++v
         }
         // right
-        while(this.tiles[x+1][y] != upstart){ 
+        while(this.tiles[x][y+1] != upstart && this.tiles[x][y+1] != 0){ 
             this.tiles[++x][y] = ++v
         }
+        // down
+        while(this.tiles[x][y+1] != upstart){ 
+            this.tiles[x][++y] = ++v
+        }
+
     }
 }
 
 
-let theBoard = new Board(40)
+let theBoard = new Board(32)
 
 
 theBoard.draw = function() {
     xs = this.tiles.length
     ys = this.tiles[0].length
-    formatter = new Intl.NumberFormat('en-IN', { minimumIntegerDigits: 3 })
+    formatter = new Intl.NumberFormat('de-DE', { minimumIntegerDigits: 3 , useGrouping: false})
     filling = "yellow"
     for (y = 0; y < ys; y ++ ) {
         for (x = 0; x < xs ; x ++ ) {
@@ -127,7 +128,7 @@ theBoard.draw = function() {
 
 
 theBoard.placeKnight = function() {
-    d3.select("#g1").append("use").attr("xlink:href", "#knight").attr("transform", "scale(0.7)").attr("id", "knight")
+    d3.select("#g1").append("use").attr("xlink:href", "#knight").attr("transform", "scale(0.5)").attr("id", "knight")
     this.knight = {
         "pos" : this.center,
         "visitedFields" : new Set([])
@@ -158,6 +159,7 @@ theBoard.moveKnight = function() {
         this.scoreboardBox.moves ++ 
         this.scoreboardBox.possibilities = possibleMoves.length 
         this.scoreboardBox.update()
+        console.log(nextMove)
     }
 
     dx = possibleMoves[0].pos.x - this.knight.pos.x
@@ -177,6 +179,6 @@ theBoard.moveKnight = function() {
 theBoard.draw()
 theBoard.placeKnight()
 
-for (i = 0; i< 3000;i++){
-    setTimeout(function() {theBoard.moveKnight()}, i*10)
+for (i = 0; i< 2100;i++){
+    setTimeout(function() {theBoard.moveKnight()}, i*20)
 }
